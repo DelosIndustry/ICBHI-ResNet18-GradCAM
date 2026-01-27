@@ -184,20 +184,27 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_ds, batch_size=CONFIG['batch_size'], shuffle=True, num_workers=0) # 윈도우라면 num_workers=0 권장
     val_loader = DataLoader(val_ds, batch_size=CONFIG['batch_size'], shuffle=False)
     
-    # 4. 불균형 가중치 계산
+    # 4. 불균형 가중치 계산 (수정된 부분)
     labels = [x['label'] for x in train_data]
     num_healthy = labels.count(0)
     num_copd = labels.count(1)
     
     print(f"클래스 분포 - Healthy: {num_healthy}, COPD: {num_copd}")
     
-    weight_0 = (num_healthy + num_copd) / (2 * num_healthy)
-    weight_1 = (num_healthy + num_copd) / (2 * num_copd)
+    total = num_healthy + num_copd
+    
+    # [수정됨] Healthy(0)에 강제 가중치 10배 부여!
+    # 이유: Threshold 0.9에서도 특이도가 5.7%밖에 안 나와서, 모델이 정상을 더 중요하게 보도록 강제함.
+    weight_0 = (total / (2 * num_healthy)) * 2.0 
+    weight_1 = (total / (2 * num_copd)) * 1.0  # COPD는 그대로
+    
+    print(f"적용된 가중치 - Healthy: {weight_0:.4f}, COPD: {weight_1:.4f}")
+    
     class_weights = torch.tensor([weight_0, weight_1], dtype=torch.float32).to(device)
     
     # 5. 모델, Loss, Optimizer
     model = get_model().to(device)
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    criterion = nn.CrossEntropyLoss(weight=class_weights) # 가중치 적용된 Loss
     optimizer = optim.Adam(model.parameters(), lr=CONFIG['learning_rate'])
     
     # 6. 학습 루프
