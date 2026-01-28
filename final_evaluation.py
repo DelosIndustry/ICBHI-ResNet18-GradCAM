@@ -13,7 +13,7 @@ import shutil # 파일 복사용
 from tqdm import tqdm
 
 # ==========================================
-# 1. 설정 (Threshold 0.85 확정!)
+# 1. 설정 (Threshold 0.48 확정!)
 # ==========================================
 CONFIG = {
     'data_dir': './Respiratory_Sound_Database/audio_and_txt_files',    
@@ -22,7 +22,7 @@ CONFIG = {
     'sample_rate': 16000,
     'n_mels': 128,
     'duration': 5,
-    'final_threshold': 0.85,  # 황금 임계값 적용
+    'final_threshold': 0.48,  # 황금 임계값 적용
     'save_dir': './result_images' # 결과 이미지 저장 폴더
 }
 
@@ -148,6 +148,8 @@ if __name__ == "__main__":
     plt.figure(figsize=(6, 5))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
                 xticklabels=['Healthy', 'COPD'], yticklabels=['Healthy', 'COPD'])
+    plt.xlabel('Predicted label')
+    plt.ylabel('True label')
     plt.title(f"Confusion Matrix (Th={CONFIG['final_threshold']})")
     plt.savefig(os.path.join(CONFIG['save_dir'], 'final_confusion_matrix.png'), dpi=300)
     print("📸 Confusion Matrix 저장 완료!")
